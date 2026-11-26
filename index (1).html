@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0D0D0E" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#F8F9FA" media="(prefers-color-scheme: light)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>РемонтЗаявки — Сервисный центр</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="manifest" data-manifest='{"name":"РемонтЗаявки","short_name":"Заявки","start_url":".","display":"standalone","background_color":"#0D0D0E","theme_color":"#0D0D0E","icons":[{"src":"data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛠️</text></svg>","sizes":"any","type":"image/svg+xml"}]}'>
+<style>
+/* ===== DESIGN TOKENS (happ.su / Linear Style) ===== */
+:root {
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --step-0: clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem);
+  --step-1: clamp(0.875rem, 0.825rem + 0.25vw, 1rem);
+  --step-2: clamp(1rem, 0.925rem + 0.375vw, 1.125rem);
+  --step-3: clamp(1.25rem, 1.125rem + 0.625vw, 1.5rem);
+  --step-4: clamp(1.75rem, 1.5rem + 1.25vw, 2.5rem);
+  --radius-s: 8px; --radius-m: 12px; --radius-l: 24px;
+  --shadow-card: 0 4px 24px rgba(0,0,0,.08);
+  --shadow-glow: 0 0 20px rgba(10,132,255,.15);
+  --transition: 200ms cubic-bezier(.16,1,.3,1);
+  --z-header: 100; --z-drawer: 200; --z-modal: 300; --z-toast: 400;
+}
+[data-theme="light"] {
+  --bg: #F8F9FA; --surface: #FFFFFF; --surface-hover: #F1F3F5;
+  --text: #1C1C1E; --text-muted: #8E8E93; --border: #E4E6EB;
+  --accent: #007AFF; --accent-hover: #0062CC; --accent-text: #FFFFFF;
+  --accent-2: #34C759; --error: #FF3B30; --success: #34C759;
+  --shadow-card: 0 4px 24px rgba(0,0,0,.06);
+}
+[data-theme="dark"] {
+  --bg: #0D0D0E; --surface: #161618; --surface-hover: #1F1F21;
+  --text: #F2F2F7; --text-muted: #98989F; --border: #2C2C2E;
+  --accent: #0A84FF; --accent-hover: #0071E3; --accent-text: #FFFFFF;
+  --accent-2: #30D158; --error: #FF453A; --success: #30D158;
+  --shadow-card: 0 4px 32px rgba(0,0,0,.4);
+  --shadow-glow: 0 0 24px rgba(10,132,255,.2);
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { color-scheme: dark; } }
+@media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) { color-scheme: light; } }
+
+/* ===== RESET & BASE ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+body { font-family: var(--font-sans); font-size: var(--step-1); line-height: 1.4; color: var(--text); background: var(--bg); min-height: 100vh; display: flex; flex-direction: column; transition: background var(--transition), color var(--transition); overflow-x: hidden; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+button { font: inherit; cursor: pointer; border: none; background: none; }
+input, textarea, select { font: inherit; color: var(--text); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-m); padding: 14px 16px; width: 100%; transition: border-color var(--transition), box-shadow var(--transition); }
+input:focus, textarea:focus, select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent); }
+input::placeholder, textarea::placeholder { color: var(--text-muted); opacity: 0.7; }
+input[disabled], textarea[disabled], select[disabled], button[disabled] { opacity: 0.5; cursor: not-allowed; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
+/* ===== LAYOUT ===== */
+#app { flex: 1; display: flex; flex-direction: column; min-height: 100vh; position: relative; z-index: 1; }
+
+/* Header */
+.header { position: sticky; top: 0; z-index: var(--z-header); height: 64px; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; background: color-mix(in srgb, var(--bg) 90%, transparent); backdrop-filter: saturate(180%) blur(20px); border-bottom: 1px solid var(--border); }
+.header__logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: var(--step-3); color: var(--text); letter-spacing: -0.02em; }
+.header__logo svg { width: 28px; height: 28px; color: var(--accent); flex-shrink: 0; }
+.header__actions { display: flex; align-items: center; gap: 8px; }
+.btn-icon { display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: var(--radius-s); color: var(--text); transition: background var(--transition); }
+.btn-icon:hover { background: var(--surface-hover); }
+.btn-icon svg { width: 22px; height: 22px; }
+
+/* Main Content */
+.main { flex: 1; padding: 24px 16px; max-width: 640px; width: 100%; margin: 0 auto; display: flex; flex-direction: column; gap: 24px; }
+.screen { display: none; animation: fadeIn 0.3s var(--transition); }
+.screen.active { display: flex; flex-direction: column; gap: 20px; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+/* Cards */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-l); padding: 24px; box-shadow: var(--shadow-card); }
+.card--compact { padding: 16px; }
+
+/* Typography */
+.h1 { font-size: var(--step-4); font-weight: 700; line-height: 1.2; letter-spacing: -0.03em; color: var(--text); }
+.h2 { font-size: var(--step-3); font-weight: 600; line-height: 1.3; color: var(--text); }
+.body { font-size: var(--step-1); color: var(--text); }
+.body--muted { color: var(--text-muted); font-size: var(--step-0); }
+.label { display: block; font-size: var(--step-0); font-weight: 500; color: var(--text-muted); margin-bottom: 6px; }
+
+/* Buttons */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 52px; padding: 0 24px; border-radius: var(--radius-s); font-size: var(--step-1); font-weight: 600; line-height: 1; white-space: nowrap; transition: transform 0.1s ease, background var(--transition), opacity var(--transition); min-width: 120px; }
+.btn:active:not(:disabled) { transform: scale(0.98); }
+.btn--primary { background: var(--accent); color: var(--accent-text); box-shadow: var(--shadow-glow); }
+.btn--primary:hover:not(:disabled) { background: var(--accent-hover); }
+.btn--secondary { background: var(--surface-hover); color: var(--text); border: 1px solid var(--border); }
+.btn--secondary:hover:not(:disabled) { background: var(--border); }
+.btn--ghost { color: var(--accent); background: transparent; }
+.btn--ghost:hover { background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.btn--block { width: 100%; }
+.btn .spinner { width: 20px; height: 20px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: spin 0.7s linear infinite; display: none; }
+.btn.loading .spinner { display: block; }
+.btn.loading .btn__text { opacity: 0; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Form */
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field--error input, .field--error textarea, .field--error select { border-color: var(--error); }
+.field__error { font-size: var(--step-0); color: var(--error); min-height: 16px; }
+.textarea { min-height: 110px; resize: vertical; }
+
+/* Auth Screen */
+.auth-card { text-align: center; }
+.auth-card__icon { width: 80px; height: 80px; margin: 0 auto 16px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent-2)); display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-glow); }
+.auth-card__icon svg { width: 40px; height: 40px; color: white; }
+.auth-card__title { margin-bottom: 4px; }
+.auth-card__desc { color: var(--text-muted); margin-bottom: 24px; }
+.auth-card__btn { margin-top: 8px; }
+
+/* Profile Form */
+.form-section { display: flex; flex-direction: column; gap: 20px; }
+.form-section__title { font-size: var(--step-2); font-weight: 600; padding-bottom: 12px; border-bottom: 1px solid var(--border); margin-bottom: 4px; }
+.user-info { display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--surface-hover); border-radius: var(--radius-m); }
+.user-info__avatar { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent-2)); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: var(--step-2); flex-shrink: 0; }
+.user-info__name { font-weight: 600; color: var(--text); }
+.user-info__phone { font-size: var(--step-0); color: var(--text-muted); }
+
+/* Admin Panel */
+.admin-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.admin-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: color-mix(in srgb, var(--accent) 15%, transparent); color: var(--accent); border-radius: 100px; font-size: var(--step-0); font-weight: 600; }
+.requests-list { display: flex; flex-direction: column; gap: 12px; max-height: 60vh; overflow-y: auto; padding-right: 4px; }
+.request-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-m); padding: 16px; transition: box-shadow var(--transition); }
+.request-card:hover { box-shadow: var(--shadow-card); }
+.request-card__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+.request-card__meta { display: flex; flex-direction: column; gap: 2px; }
+.request-card__name { font-weight: 600; font-size: var(--step-1); }
+.request-card__phone { font-size: var(--step-0); color: var(--text-muted); }
+.request-card__time { font-size: var(--step-0); color: var(--text-muted); white-space: nowrap; }
+.request-card__body { display: grid; gap: 10px; font-size: var(--step-1); }
+.request-card__row { display: flex; gap: 8px; flex-wrap: wrap; }
+.request-card__label { color: var(--text-muted); font-weight: 500; min-width: 90px; }
+.request-card__value { color: var(--text); word-break: break-word; }
+.request-card__value--budget { color: var(--accent-2); font-weight: 600; }
+
+/* Empty State */
+.empty { text-align: center; padding: 48px 16px; color: var(--text-muted); }
+.empty svg { width: 64px; height: 64px; margin-bottom: 16px; opacity: 0.5; }
+
+/* Support Drawer */
+.drawer { position: fixed; inset: 0; z-index: var(--z-drawer); display: flex; pointer-events: none; opacity: 0; transition: opacity var(--transition); }
+.drawer.open { opacity: 1; pointer-events: auto; }
+.drawer__backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); }
+.drawer__panel { position: relative; width: 100%; max-width: 360px; margin: auto 16px auto auto; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-l); box-shadow: 0 24px 48px rgba(0,0,0,.3); transform: translateX(100%); transition: transform 0.3s cubic-bezier(.16,1,.3,1); display: flex; flex-direction: column; }
+.drawer.open .drawer__panel { transform: translateX(0); }
+.drawer__header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+.drawer__title { font-weight: 600; font-size: var(--step-2); }
+.drawer__close { padding: 8px; border-radius: var(--radius-s); color: var(--text-muted); }
+.drawer__close:hover { background: var(--surface-hover); color: var(--text); }
+.drawer__content { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+.support-info { display: flex; flex-direction: column; gap: 12px; }
+.support-row { display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--surface-hover); border-radius: var(--radius-m); }
+.support-row svg { width: 24px; height: 24px; color: var(--accent); flex-shrink: 0; }
+.support-row__label { font-size: var(--step-0); color: var(--text-muted); }
+.support-row__value { font-weight: 500; color: var(--text); }
+
+/* Toast */
+.toast-container { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: var(--z-toast); display: flex; flex-direction: column; gap: 8px; pointer-events: none; width: calc(100% - 32px); max-width: 360px; }
+.toast { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-m); padding: 14px 16px; box-shadow: var(--shadow-card); display: flex; align-items: center; gap: 12px; animation: slideUp 0.3s var(--transition); pointer-events: auto; }
+.toast--success { border-left: 4px solid var(--success); }
+.toast--error { border-left: 4px solid var(--error); }
+.toast__icon { width: 20px; height: 20px; flex-shrink: 0; }
+.toast__text { flex: 1; font-size: var(--step-1); }
+@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
+
+/* Loader Overlay */
+.loader-overlay { position: fixed; inset: 0; z-index: 1000; background: var(--bg); display: flex; align-items: center; justify-content: center; gap: 16px; flex-direction: column; transition: opacity 0.3s, visibility 0.3s; }
+.loader-overlay.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+.loader-spinner { width: 48px; height: 48px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+.loader-text { font-size: var(--step-1); color: var(--text-muted); }
+
+/* Safe Area Bottom */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .main { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
+  .drawer__panel { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- Loader -->
+  <div id="loader" class="loader-overlay" role="status" aria-live="polite">
+    <div class="loader-spinner"></div>
+    <span class="loader-text" id="loaderText">Инициализация…</span>
+  </div>
+
+  <!-- Header -->
+  <header class="header" role="banner">
+    <div class="header__logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3 0l-6.91-6.91a6 6 0 0 1 7.94-7.94l-3.77 3.77a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1 7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3 0l-6.91-6.91a6 6 0 0 1 7.94-7.94l-3.77 3.77a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0z"></path></svg>
+      РемонтЗаявки
+    </div>
+    <div class="header__actions">
+      <button id="themeToggle" class="btn-icon" aria-label="Сменить тему" title="Тема">
+        <svg id="iconSun" class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+        <svg id="iconMoon" class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+      </button>
+      <button id="supportBtn" class="btn-icon" aria-label="Связь с поддержкой" title="Поддержка">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main class="main" role="main">
+    <!-- Screen: Loading/Auth -->
+    <section id="screenAuth" class="screen card auth-card" aria-labelledby="authTitle">
+      <div class="auth-card__icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+      </div>
+      <h1 id="authTitle" class="h1 auth-card__title">Вход в аккаунт</h1>
+      <p class="body--muted auth-card__desc">Авторизуйтесь через Telegram, чтобы оставить заявку на ремонт</p>
+      <button id="btnAuth" class="btn btn--primary btn--block auth-card__btn" disabled>
+        <span class="btn__text">Ожидание Telegram…</span>
+        <span class="spinner" aria-hidden="true"></span>
+      </button>
+      <p id="authError" class="body--muted" style="margin-top:12px; min-height: 20px; color: var(--error);"></p>
+    </section>
+
+    <!-- Screen: Request Form (User) -->
+    <section id="screenForm" class="screen card" aria-labelledby="formTitle">
+      <header>
+        <h1 id="formTitle" class="h1">Новая заявка</h1>
+        <p class="body--muted">Заполните детали, мастер свяжется с вами в течение 15 минут</p>
+      </header>
+      <div class="user-info" id="userInfoView" aria-hidden="true">
+        <div class="user-info__avatar" id="userAvatar">?</div>
+        <div>
+          <div class="user-info__name" id="userNameView">—</div>
+          <div class="user-info__phone" id="userPhoneView">—</div>
+        </div>
+      </div>
+      <form id="requestForm" class="form-section" novalidate>
+        <div class="form-section__title">Детали заявки</div>
+        <div class="field">
+          <label class="label" for="address">Адрес объекта <span aria-hidden="true">*</span></label>
+          <input type="text" id="address" name="address" placeholder="г. Москва, ул. Примерная, д. 1, кв. 10" required autocomplete="street-address">
+          <div class="field__error" id="errAddress" aria-live="polite"></div>
+        </div>
+        <div class="field">
+          <label class="label" for="problem">Проблема или пожелания <span aria-hidden="true">*</span></label>
+          <textarea id="problem" name="problem" class="textarea" placeholder="Опишите, что сломалось или какой нужен ремонт…" required></textarea>
+          <div class="field__error" id="errProblem" aria-live="polite"></div>
+        </div>
+        <div class="field">
+          <label class="label" for="budget">Ориентировочный бюджет (₽)</label>
+          <input type="number" id="budget" name="budget" min="0" step="1000" placeholder="Например: 50000" inputmode="numeric">
+          <div class="field__error" id="errBudget" aria-live="polite"></div>
+        </div>
+        <button type="submit" class="btn btn--primary btn--block" style="margin-top: 8px;">
+          <span class="btn__text">Подать заявку</span>
+          <span class="spinner" aria-hidden="true"></span>
+        </button>
+      </form>
+    </section>
+
+    <!-- Screen: Admin Panel -->
+    <section id="screenAdmin" class="screen card" aria-labelledby="adminTitle">
+      <header class="admin-header">
+        <div>
+          <h1 id="adminTitle" class="h1">Панель владельца</h1>
+          <p class="body--muted">Все входящие заявки в реальном времени</p>
+        </div>
+        <span class="admin-badge" aria-label="Режим администратора">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+          Админ
+        </span>
+      </header>
+      <div id="requestsList" class="requests-list" role="list" aria-label="Список заявок"></div>
+      <div id="emptyState" class="empty" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+        <p class="body">Заявок пока нет</p>
+        <p class="body--muted">Новые заявки появятся здесь автоматически</p>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- Support Drawer -->
+<aside id="supportDrawer" class="drawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle" hidden>
+  <div class="drawer__backdrop" tabindex="-1" aria-hidden="true"></div>
+  <div class="drawer__panel">
+    <header class="drawer__header">
+      <h2 id="drawerTitle" class="drawer__title">Связь с поддержкой</h2>
+      <button class="drawer__close btn-icon" id="drawerClose" aria-label="Закрыть">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </header>
+    <div class="drawer__content">
+      <div class="support-info">
+        <div class="support-row">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+          <div>
+            <div class="support-row__label">Телефон</div>
+            <a href="tel:+79224902245" class="support-row__value">+7 922 490 22 45</a>
+          </div>
+        </div>
+        <div class="support-row">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+          <div>
+            <div class="support-row__label">Telegram</div>
+            <a href="https://t.me/SergeiFTR1" target="_blank" rel="noopener" class="support-row__value">@SergeiFTR1</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- Toasts -->
+<div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+<!-- Firebase SDKs (CDN) -->
+<script type="module">
+  // ===== CONFIGURATION =====
+  // ЗАПОЛНИТЕ ЭТИ ДАННЫЕ ИЗ КОНСОЛИ FIREBASE (Project Settings > General > Your apps > Web)
+  const FIREBASE_CONFIG = {
+    apiKey: "ВАШ_API_KEY",
+    authDomain: "ВАШ_PROJECT_ID.firebaseapp.com",
+    projectId: "ВАШ_PROJECT_ID",
+    storageBucket: "ВАШ_PROJECT_ID.appspot.com",
+    messagingSenderId: "ВАШ_SENDER_ID",
+    appId: "ВАШ_APP_ID"
+  };
+  // URL вашего Cloudflare Worker (Auth Endpoint)
+  const AUTH_WORKER_URL = "https://ВАШ_ВОРКЕР.ВАШ_СУБДОМЕН.workers.dev/auth";
+
+  const OWNER_TG_ID = "1149072036"; // ID владельца (строка!)
+
+  // ===== IMPORTS =====
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+  import { getAuth, signInWithCustomToken, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+  import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, query, orderBy, serverTimestamp, Timestamp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+  // ===== INIT FIREBASE =====
+  const app = initializeApp(FIREBASE_CONFIG);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  // ===== DOM ELEMENTS =====
+  const $ = (sel) => document.querySelector(sel);
+  const $$ = (sel) => document.querySelectorAll(sel);
+
+  const loader = $('#loader');
+  const loaderText = $('#loaderText');
+  const screenAuth = $('#screenAuth');
+  const screenForm = $('#screenForm');
+  const screenAdmin = $('#screenAdmin');
+  const btnAuth = $('#btnAuth');
+  const authError = $('#authError');
+  const requestsList = $('#requestsList');
+  const emptyState = $('#emptyState');
+  const requestForm = $('#requestForm');
+  const userInfoView = $('#userInfoView');
+  const userAvatar = $('#userAvatar');
+  const userNameView = $('#userNameView');
+  const userPhoneView = $('#userPhoneView');
+  const supportDrawer = $('#supportDrawer');
+  const supportBtn = $('#supportBtn');
+  const drawerClose = $('#drawerClose');
+  const drawerBackdrop = $('.drawer__backdrop');
+  const toastContainer = $('#toastContainer');
+  const themeToggle = $('#themeToggle');
+  const iconSun = $('#iconSun');
+  const iconMoon = $('#iconMoon');
+
+  // ===== STATE =====
+  let tg = window.Telegram?.WebApp;
+  let initData = '';
+  let currentUser = null; // Firebase User
+  let unsubscribeRequests = null;
+
+  // ===== UTILS =====
+  const showToast = (message, type = 'success') => {
+    const toast = document.createElement('div');
+    toast.className = `toast toast--${type}`;
+    toast.innerHTML = `
+      <svg class="toast__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        ${type === 'success' ? '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline>' : '<circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line>'}
+      </svg>
+      <span class="toast__text">${message}</span>
+    `;
+    toastContainer.appendChild(toast);
+    setTimeout(() => { toast.style.animation = 'slideUp 0.3s reverse'; setTimeout(() => toast.remove(), 300); }, 4000);
+  };
+
+  const setTheme = (theme) => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+    iconSun.style.display = theme === 'dark' ? 'block' : 'none';
+    iconMoon.style.display = theme === 'light' ? 'block' : 'none';
+  };
+  const initTheme = () => {
+    const saved = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    setTheme(saved || (prefersDark ? 'dark' : 'light'));
+  };
+  themeToggle.onclick = () => setTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+
+  const showScreen = (screen) => {
+    $$('.screen').forEach(s => s.classList.remove('active'));
+    screen.classList.add('active');
+  };
+
+  const setLoading = (btn, loading) => btn.classList.toggle('loading', loading);
+
+  const validateField = (input, condition, errorEl, message) => {
+    const field = input.closest('.field');
+    if (!condition) {
+      field.classList.add('field--error');
+      errorEl.textContent = message;
+      return false;
+    } else {
+      field.classList.remove('field--error');
+      errorEl.textContent = '';
+      return true;
+    }
+  };
+
+  // ===== TELEGRAM WEB APP INIT =====
+  function initTelegram() {
+    if (!tg) {
+      loaderText.textContent = 'Ошибка: Откройте через Telegram (Меню → Приложения)';
+      btnAuth.disabled = true;
+      btnAuth.querySelector('.btn__text').textContent = 'Недоступно вне Telegram';
+      authError.textContent = 'Это Mini App работает только внутри Telegram. Перейдите по ссылке из бота.';
+      return false;
+    }
+    tg.expand();
+    tg.ready();
+    initData = tg.initData || '';
+    if (tg.initDataUnsafe?.user) {
+      // Pre-fill avatar/name if available instantly
+      const u = tg.initDataUnsafe.user;
+      userAvatar.textContent = u.first_name?.[0]?.toUpperCase() || '?';
+      userNameView.textContent = `${u.first_name || ''} ${u.last_name || ''}`.trim();
+    }
+    return true;
+  }
+
+  // ===== AUTH FLOW =====
+  async function authenticate() {
+    if (!initData) {
+      authError.textContent = 'Данные Telegram не получены. Перезапустите Mini App.';
+      setLoading(btnAuth, false);
+      btnAuth.disabled = false;
+      btnAuth.querySelector('.btn__text').textContent = 'Повторить попытку';
+      return;
+    }
+
+    setLoading(btnAuth, true);
+    btnAuth.querySelector('.btn__text').textContent = 'Авторизация…';
+    authError.textContent = '';
+
+    try {
+      // 1. Call Cloudflare Worker to validate initData & get Firebase Custom Token
+      const res = await fetch(AUTH_WORKER_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ initData })
+      });
+      const data = await res.json();
+      if (!res.ok || !data.token) throw new Error(data.error || 'Auth failed');
+
+      // 2. Sign in to Firebase with Custom Token
+      const userCred = await signInWithCustomToken(auth, data.token);
+      currentUser = userCred.user;
+      // Auth state listener will handle UI switch
+    } catch (e) {
+      console.error('Auth error:', e);
+      authError.textContent = 'Ошибка входа: ' + e.message;
+      setLoading(btnAuth, false);
+      btnAuth.disabled = false;
+      btnAuth.querySelector('.btn__text').textContent = 'Войти через Telegram';
+    }
+  }
+
+  // ===== FIREBASE AUTH STATE LISTENER =====
+  onAuthStateChanged(auth, async (user) => {
+    loader.classList.add('hidden');
+    if (user) {
+      currentUser = user;
+      const isOwner = user.uid === OWNER_TG_ID;
+      // Load Profile
+      const profileRef = doc(db, 'profiles', user.uid);
+      const profileSnap = await getDoc(profileRef);
+      const profile = profileSnap.data();
+
+      if (isOwner) {
+        showScreen(screenAdmin);
+        startAdminListener();
+      } else {
+        showScreen(screenForm);
+        if (profile) {
+          // Profile exists -> Fill form view
+          userInfoView.hidden = false;
+          userAvatar.textContent = profile.name?.[0]?.toUpperCase() || '?';
+          userNameView.textContent = profile.name;
+          userPhoneView.textContent = profile.phone;
+          // Request contact permission if phone missing (unlikely if profile exists)
+        } else {
+          // First time -> Request Contact
+          userInfoView.hidden = true;
+          requestContact();
+        }
+      }
+    } else {
+      // Logged out
+      showScreen(screenAuth);
+      btnAuth.disabled = false;
+      setLoading(btnAuth, false);
+      btnAuth.querySelector('.btn__text').textContent = 'Войти через Telegram';
+      if (unsubscribeRequests) { unsubscribeRequests(); unsubscribeRequests = null; }
+    }
+  });
+
+  // ===== REQUEST CONTACT (Native Telegram Button) =====
+  function requestContact() {
+    if (!tg) return;
+    // Show native "Share Contact" button in Web App header/footer area
+    // We use a custom button in UI that triggers the native popup
+    btnAuth.hidden = false;
+    btnAuth.disabled = false;
+    setLoading(btnAuth, false);
+    btnAuth.querySelector('.btn__text').textContent = 'Поделиться контактом ☎️';
+    btnAuth.classList.remove('btn--primary');
+    btnAuth.classList.add('btn--secondary');
+    authError.textContent = 'Нажмите кнопку, чтобы передать номер телефона в приложение';
+    
+    btnAuth.onclick = async () => {
+      setLoading(btnAuth, true);
+      try {
+        // This opens native Telegram "Share Contact" sheet
+        const contact = await tg.requestContact();
+        if (contact) {
+          // Save profile to Firestore
+          const profileRef = doc(db, 'profiles', currentUser.uid);
+          await setDoc(profileRef, {
+            name: `${contact.first_name || ''} ${contact.last_name || ''}`.trim(),
+            phone: contact.phone_number,
+            tgId: currentUser.uid,
+            updatedAt: serverTimestamp()
+          }, { merge: true });
+          showToast('Контакт сохранен! Заполните заявку ниже.');
+          userInfoView.hidden = false;
+          userAvatar.textContent = contact.first_name?.[0]?.toUpperCase() || '?';
+          userNameView.textContent = `${contact.first_name || ''} ${contact.last_name || ''}`.trim();
+          userPhoneView.textContent = contact.phone_number;
+          btnAuth.hidden = true; // Hide auth button
+        } else {
+          showToast('Доступ к контакту отклонен', 'error');
+        }
+      } catch (e) {
+        console.error(e);
+        showToast('Ошибка получения контакта: ' + e.message, 'error');
+      } finally {
+        setLoading(btnAuth, false);
+      }
+    };
+  }
+
+  // ===== SUBMIT REQUEST (User) =====
+  requestForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const submitBtn = requestForm.querySelector('button[type="submit"]');
+    setLoading(submitBtn, true);
+
+    const address = $('#address').value.trim();
+    const problem = $('#problem').value.trim();
+    const budget = $('#budget').value ? parseInt($('#budget').value, 10) : null;
+
+    let valid = true;
+    valid &= validateField($('#address'), address.length >= 5, $('#errAddress'), 'Введите корректный адрес (мин. 5 символов)');
+    valid &= validateField($('#problem'), problem.length >= 10, $('#errProblem'), 'Опишите проблему подробнее (мин. 10 символов)');
+    if (budget !== null && budget < 0) {
+      valid &= validateField($('#budget'), false, $('#errBudget'), 'Бюджет не может быть отрицательным');
+    } else {
+      validateField($('#budget'), true, $('#errBudget'), '');
+    }
+
+    if (!valid) { setLoading(submitBtn, false); return; }
+
+    try {
+      const requestRef = doc(collection(db, 'requests'));
+      await setDoc(requestRef, {
+        userId: currentUser.uid,
+        userName: userNameView.textContent,
+        userPhone: userPhoneView.textContent,
+        address,
+        problem,
+        budget,
+        status: 'new',
+        createdAt: serverTimestamp()
+      });
+      showToast('Заявка успешно отправлена! Мастер свяжется с вами.');
+      requestForm.reset();
+    } catch (err) {
+      console.error(err);
+      showToast('Ошибка отправки: ' + err.message, 'error');
+    } finally {
+      setLoading(submitBtn, false);
+    }
+  });
+
+  // ===== ADMIN LISTENER =====
+  function startAdminListener() {
+    if (unsubscribeRequests) unsubscribeRequests();
+    requestsList.innerHTML = '';
+    emptyState.hidden = true;
+
+    const q = query(collection(db, 'requests'), orderBy('createdAt', 'desc'));
+    unsubscribeRequests = onSnapshot(q, (snapshot) => {
+      if (snapshot.empty) {
+        emptyState.hidden = false;
+        return;
+      }
+      emptyState.hidden = true;
+      requestsList.innerHTML = '';
+      snapshot.forEach((docSnap) => {
+        const req = docSnap.data();
+        const card = document.createElement('article');
+        card.className = 'request-card';
+        card.setAttribute('role', 'listitem');
+        const time = req.createdAt instanceof Timestamp ? req.createdAt.toDate() : new Date();
+        const timeStr = time.toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+        card.innerHTML = `
+          <div class="request-card__head">
+            <div class="request-card__meta">
+              <span class="request-card__name">${escapeHtml(req.userName)}</span>
+              <span class="request-card__phone">${escapeHtml(req.userPhone)}</span>
+            </div>
+            <time class="request-card__time" datetime="${time.toISOString()}">${timeStr}</time>
+          </div>
+          <div class="request-card__body">
+            <div class="request-card__row"><span class="request-card__label">Адрес:</span><span class="request-card__value">${escapeHtml(req.address)}</span></div>
+            <div class="request-card__row"><span class="request-card__label">Проблема:</span><span class="request-card__value">${escapeHtml(req.problem)}</span></div>
+            ${req.budget ? `<div class="request-card__row"><span class="request-card__label">Бюджет:</span><span class="request-card__value request-card__value--budget">${Number(req.budget).toLocaleString('ru-RU')} ₽</span></div>` : ''}
+            <div class="request-card__row"><span class="request-card__label">Статус:</span><span class="request-card__value">${getStatusLabel(req.status)}</span></div>
+          </div>
+        `;
+        requestsList.appendChild(card);
+      });
+    }, (err) => {
+      console.error('Admin listener error:', err);
+      showToast('Ошибка загрузки заявок: ' + err.message, 'error');
+    });
+  }
+
+  const getStatusLabel = (s) => ({ new: '🆕 Новая', in_progress: '🛠 В работе', done: '✅ Готово', cancel: '❌ Отмена' }[s] || s);
+  const escapeHtml = (str) => String(str).replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+
+  // ===== SUPPORT DRAWER =====
+  const openDrawer = () => { supportDrawer.hidden = false; requestAnimationFrame(() => supportDrawer.classList.add('open')); document.body.style.overflow = 'hidden'; };
+  const closeDrawer = () => { supportDrawer.classList.remove('open'); setTimeout(() => { supportDrawer.hidden = true; document.body.style.overflow = ''; }, 300); };
+  supportBtn.onclick = openDrawer;
+  drawerClose.onclick = closeDrawer;
+  drawerBackdrop.onclick = closeDrawer;
+
+  // ===== INIT APP =====
+  function init() {
+    initTheme();
+    const tgReady = initTelegram();
+    if (tgReady) {
+      btnAuth.onclick = authenticate;
+      // Check if already logged in (Firebase persists session)
+      // onAuthStateChanged handles the rest
+    }
+  }
+  init();
+</script>
+</body>
+</html>
