@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark light">
+<title>РемонтЗаявки — сбор заявок на ремонт</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ============ ТОКЕНЫ ============ */
+:root{
+  --bg:#F5F6FA; --surface:#FFFFFF; --surface-2:#F8F9FC; --surface-3:#EEF0F7;
+  --border:#E3E6EF; --border-strong:#D2D7E4;
+  --text:#0B0D12; --muted:#5A6272;
+  --accent:#3D6BFF; --accent-2:#7C5CFF; --accent-soft:rgba(61,107,255,.12);
+  --success:#12A15C; --success-soft:rgba(18,161,92,.12);
+  --warn:#C77A00; --warn-soft:rgba(199,122,0,.12);
+  --error:#E03B3B; --error-soft:rgba(224,59,59,.12);
+  --shadow:0 8px 32px rgba(15,20,40,.08);
+  --shadow-lg:0 18px 50px rgba(15,20,40,.14);
+  --glow:0 0 0 1px rgba(61,107,255,.30), 0 14px 44px rgba(61,107,255,.22);
+  --r:16px; --r-sm:12px; --r-xs:8px;
+  --t:200ms cubic-bezier(.4,0,.2,1);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0B0D12; --surface:#151922; --surface-2:#1A1F2B; --surface-3:#202634;
+    --border:#242A38; --border-strong:#2E3646;
+    --text:#F2F4F8; --muted:#9AA3B2;
+    --accent:#5B8CFF; --accent-2:#7C5CFF; --accent-soft:rgba(91,140,255,.16);
+    --success:#3DD68C; --success-soft:rgba(61,214,140,.14);
+    --warn:#F0B429; --warn-soft:rgba(240,180,41,.14);
+    --error:#FF5C5C; --error-soft:rgba(255,92,92,.14);
+    --shadow:0 8px 32px rgba(0,0,0,.45);
+    --shadow-lg:0 22px 60px rgba(0,0,0,.55);
+    --glow:0 0 0 1px rgba(91,140,255,.35), 0 16px 50px rgba(91,140,255,.28);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0B0D12; --surface:#151922; --surface-2:#1A1F2B; --surface-3:#202634;
+  --border:#242A38; --border-strong:#2E3646;
+  --text:#F2F4F8; --muted:#9AA3B2;
+  --accent:#5B8CFF; --accent-2:#7C5CFF; --accent-soft:rgba(91,140,255,.16);
+  --success:#3DD68C; --success-soft:rgba(61,214,140,.14);
+  --warn:#F0B429; --warn-soft:rgba(240,180,41,.14);
+  --error:#FF5C5C; --error-soft:rgba(255,92,92,.14);
+  --shadow:0 8px 32px rgba(0,0,0,.45);
+  --shadow-lg:0 22px 60px rgba(0,0,0,.55);
+  --glow:0 0 0 1px rgba(91,140,255,.35), 0 16px 50px rgba(91,140,255,.28);
+}
+
+/* ============ БАЗА ============ */
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0; min-height:100vh;
+  font-family:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  font-size:16px; line-height:1.5;
+  background:var(--bg); color:var(--text);
+  -webkit-font-smoothing:antialiased;
+  transition:background var(--t), color var(--t);
+}
+h1,h2,h3,p,dl,dd{margin:0}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+a{color:var(--accent);text-decoration:none}
+::selection{background:var(--accent-soft)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+
+.bg{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden}
+.bg::before,.bg::after{content:'';position:absolute;border-radius:50%;filter:blur(30px)}
+.bg::before{width:900px;height:900px;left:-260px;top:-340px;background:radial-gradient(circle,rgba(91,140,255,.22),transparent 62%)}
+.bg::after{width:820px;height:820px;right:-240px;bottom:-320px;background:radial-gradient(circle,rgba(124,92,255,.20),transparent 62%)}
+
+.wrap{width:100%;max-width:1180px;margin:0 auto;padding:0 20px}
+
+/* ============ ШАПКА ============ */
+.topbar{
+  position:sticky;top:0;z-index:50;
+  background:color-mix(in srgb, var(--bg) 78%, transparent);
+  backdrop-filter:blur(14px) saturate(140%);
+  border-bottom:1px solid var(--border);
+}
+.topbar__in{display:flex;align-items:center;gap:16px;height:68px}
+.brand{display:flex;align-items:center;gap:10px;color:var(--text);font-weight:700;letter-spacing:-.02em;text-decoration:none}
+.brand__mark{
+  display:grid;place-items:center;width:36px;height:36px;border-radius:11px;
+  background:linear-gradient(135deg,var(--accent),var(--accent-2));
+  color:#fff;font-weight:700;font-size:17px;
+  box-shadow:0 6px 18px rgba(91,140,255,.35);
+}
+.brand__txt span{color:var(--muted);font-weight:500;font-size:14px}
+.tabs{display:flex;gap:4px;margin-left:auto;padding:4px;background:var(--surface-2);border:1px solid var(--border);border-radius:999px}
+.tab{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:8px 16px;border-radius:999px;font-size:14px;font-weight:500;color:var(--muted);
+  transition:background var(--t),color var(--t),transform var(--t);
+}
+.tab:hover{color:var(--text)}
+.tab.is-active{background:var(--surface);color:var(--text);box-shadow:var(--shadow);font-weight:600}
+.badge{
+  min-width:20px;height:20px;padding:0 6px;border-radius:999px;
+  display:inline-grid;place-items:center;font-size:11px;font-weight:700;
+  background:var(--accent-soft);color:var(--accent);
+}
+.icon-btn{
+  display:grid;place-items:center;width:40px;height:40px;border-radius:12px;
+  border:1px solid var(--border);background:var(--surface);font-size:17px;
+  transition:transform var(--t),box-shadow var(--t),border-color var(--t);
+}
+.icon-btn:hover{transform:translateY(-1px);box-shadow:var(--shadow);border-color:var(--border-strong)}
+.icon-btn:active{transform:translateY(0) scale(.96)}
+
+/* ============ ВИДЫ ============ */
+main{padding:32px 0 80px}
+.view{display:none;animation:fade .28s ease both}
+.view.is-active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+.hero{margin-bottom:28px}
+.hero h1{font-size:clamp(26px,4vw,36px);line-height:1.15;letter-spacing:-.03em;font-weight:700}
+.hero p{color:var(--muted);margin-top:8px;max-width:60ch}
+.hero__glow{
+  display:inline-block;
+  background:linear-gradient(120deg,var(--accent),var(--accent-2));
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+
+/* ============ СТАТИСТИКА ============ */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+.stat{
+  padding:16px 18px;border-radius:var(--r);background:var(--surface);
+  border:1px solid var(--border);box-shadow:var(--shadow);
+  transition:transform var(--t),box-shadow var(--t);
+}
+.stat:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg)}
+.stat__k{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+.stat__v{font-size:28px;font-weight:700;letter-spacing:-.03em;margin-top:4px}
+.stat--new .stat__v{color:var(--accent)}
+.stat--prog .stat__v{color:var(--warn)}
+.stat--done .stat__v{color:var(--success)}
+
+/* ============ ПАНЕЛИ / ФОРМА ============ */
+.panel{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r);box-shadow:var(--shadow);padding:24px;
+}
+.grid-form{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.field--full{grid-column:1/-1}
+.field__l{font-size:13px;font-weight:600;color:var(--muted)}
+.req{color:var(--error)}
+.field__i{
+  width:100%;padding:12px 14px;border-radius:var(--r-sm);
+  background:var(--surface-2);border:1px solid var(--border);
+  color:var(--text);font-size:15px;
+  transition:border-color var(--t),box-shadow var(--t),background var(--t);
+}
+.field__i::placeholder{color:var(--muted);opacity:.7}
+.field__i:hover{border-color:var(--border-strong)}
+.field__i:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-soft);background:var(--surface)}
+textarea.field__i{resize:vertical;min-height:104px}
+select.field__i{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 20px) 21px,calc(100% - 14px) 21px;background-size:6px 6px;background-repeat:no-repeat;padding-right:40px}
+.field__e{font-size:12.5px;color:var(--error);font-weight:500;min-height:16px}
+.field.has-error .field__i{border-color:var(--error);box-shadow:0 0 0 4px var(--error-soft)}
+.field__hint{font-size:12px;color:var(--muted);text-align:right;font-variant-numeric:tabular-nums}
+
+.seg{display:flex;gap:6px;padding:4px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-sm)}
+.seg__i{flex:1;position:relative}
+.seg__i input{position:absolute;opacity:0;inset:0;cursor:pointer}
+.seg__i span{
+  display:block;text-align:center;padding:9px 8px;border-radius:var(--r-xs);
+  font-size:13.5px;font-weight:500;color:var(--muted);
+  transition:background var(--t),color var(--t),box-shadow var(--t);
+}
+.seg__i input:checked + span{background:var(--surface);color:var(--text);font-weight:600;box-shadow:var(--shadow)}
+.seg__i input:focus-visible + span{outline:2px solid var(--accent);outline-offset:2px}
+
+.check{display:flex;gap:10px;align-items:flex-start;font-size:14px;color:var(--muted);cursor:pointer}
+.check input{width:18px;height:18px;margin-top:2px;accent-color:var(--accent);cursor:pointer}
+
+.form__foot{display:flex;align-items:center;gap:12px;margin-top:20px;flex-wrap:wrap}
+.form__note{font-size:12.5px;color:var(--muted)}
+
+/* ============ КНОПКИ ============ */
+.btn{
+  position:relative;display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  padding:12px 22px;border-radius:var(--r-sm);font-weight:600;font-size:15px;
+  background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;
+  box-shadow:0 8px 22px rgba(91,140,255,.30);
+  transition:transform var(--t),box-shadow var(--t),filter var(--t);
+}
+.btn:hover{transform:translateY(-1px);box-shadow:0 12px 30px rgba(91,140,255,.40);filter:brightness(1.05)}
+.btn:active{transform:translateY(0) scale(.985)}
+.btn[disabled]{opacity:.55;cursor:not-allowed;transform:none;box-shadow:none}
+.btn--ghost{background:var(--surface-2);color:var(--text);border:1px solid var(--border);box-shadow:none}
+.btn--ghost:hover{box-shadow:var(--shadow);border-color:var(--border-strong)}
+.btn--ok{background:var(--success-soft);color:var(--success);border:1px solid transparent;box-shadow:none}
+.btn--ok:hover{box-shadow:0 8px 22px var(--success-soft)}
+.btn--danger{background:var(--error-soft);color:var(--error);box-shadow:none}
+.btn--sm{padding:8px 14px;font-size:13.5px;border-radius:var(--r-xs)}
+.btn.is-loading{pointer-events:none}
+.btn.is-loading::after{
+  content:'';width:15px;height:15px;border-radius:50%;
+  border:2px solid rgba(255,255,255,.35);border-top-color:#fff;
+  animation:spin .7s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ============ ТУЛБАР СПИСКА ============ */
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:18px}
+.search{position:relative;flex:1;min-width:220px}
+.search .field__i{padding-left:40px}
+.search svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:16px;height:16px;stroke:var(--muted);fill:none;stroke-width:2}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{
+  padding:8px 14px;border-radius:999px;font-size:13.5px;font-weight:500;
+  border:1px solid var(--border);background:var(--surface);color:var(--muted);
+  transition:all var(--t);
+}
+.chip:hover{color:var(--text);border-color:var(--border-strong)}
+.chip.is-active{background:var(--accent-soft);border-color:transparent;color:var(--accent);font-weight:600}
+
+/* ============ КАРТОЧКИ ============ */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
+.card{
+  position:relative;overflow:hidden;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r);padding:20px;box-shadow:var(--shadow);
+  transition:transform var(--t),box-shadow var(--t),border-color var(--t);
+  animation:pop .3s ease both;
+  display:flex;flex-direction:column;
+}
+@keyframes pop{from{opacity:0;transform:translateY(10px) scale(.99)}to{opacity:1;transform:none}}
+.card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg);border-color:var(--border-strong)}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--accent),var(--accent-2));opacity:0;transition:opacity var(--t)}
+.card:hover::before{opacity:1}
+.card__head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px}
+.card__id{font-size:12px;color:var(--muted);font-weight:600;font-family:ui-monospace,monospace;background:var(--surface-2);padding:2px 8px;border-radius:6px}
+.card__status{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:4px 10px;border-radius:999px}
+.card__status--new{background:var(--accent-soft);color:var(--accent)}
+.card__status--progress{background:var(--warn-soft);color:var(--warn)}
+.card__status--done{background:var(--success-soft);color:var(--success)}
+.card__title{font-size:17px;font-weight:600;line-height:1.3;margin-bottom:8px;color:var(--text)}
+.card__meta{display:flex;flex-wrap:wrap;gap:10px;font-size:13px;color:var(--muted);margin-bottom:12px}
+.card__meta span{display:flex;align-items:center;gap:6px}
+.card__desc{color:var(--muted);font-size:14px;line-height:1.6;flex:1;margin-bottom:16px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.card__foot{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:12px;border-top:1px solid var(--border)}
+.card__date{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.card__actions{display:flex;gap:6px}
+
+/* ============ АДМИН ТАБЛИЦА ============ */
+.table-wrap{overflow:auto;border-radius:var(--r);border:1px solid var(--border);background:var(--surface)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+thead{background:var(--surface-2);position:sticky;top:0;z-index:1}
+th,td{padding:14px 16px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap}
+th{font-weight:600;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.05em}
+tbody tr{transition:background var(--t)}
+tbody tr:hover{background:var(--surface-2)}
+tbody tr:last-child td{border-bottom:none}
+td .badge-status{font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px;text-transform:uppercase;letter-spacing:.04em}
+.badge-status--new{background:var(--accent-soft);color:var(--accent)}
+.badge-status--progress{background:var(--warn-soft);color:var(--warn)}
+.badge-status--done{background:var(--success-soft);color:var(--success)}
+.btn-icon{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:var(--r-xs);border:1px solid var(--border);background:var(--surface);color:var(--muted);transition:all var(--t)}
+.btn-icon:hover{background:var(--error-soft);border-color:var(--error);color:var(--error);transform:scale(1.05)}
+
+/* ============ МОДАЛКИ / ТОАСТЫ ============ */
+.overlay{position:fixed;inset:0;z-index:100;display:grid;place-items:center;padding:20px;background:rgba(11,13,18,.6);backdrop-filter:blur(4px);opacity:0;visibility:hidden;transition:opacity var(--t),visibility var(--t)}
+.overlay.is-open{opacity:1;visibility:visible}
+.modal{width:100%;max-width:420px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow-lg);padding:24px;transform:translateY(20px) scale(.98);transition:transform var(--t)}
+.overlay.is-open .modal{transform:none}
+.modal__title{font-size:18px;font-weight:700;margin-bottom:8px}
+.modal__text{color:var(--muted);margin-bottom:24px;line-height:1.6}
+.modal__actions{display:flex;justify-content:flex-end;gap:10px}
+
+.toast-container{position:fixed;bottom:24px;right:24px;z-index:200;display:flex;flex-direction:column;gap:10px;pointer-events:none}
+.toast{pointer-events:auto;min-width:260px;max-width:360px;padding:14px 16px;border-radius:var(--r);background:var(--surface);border:1px solid var(--border);box-shadow:var(--shadow-lg);display:flex;align-items:center;gap:12px;animation:slideIn .3s ease;position:relative;overflow:hidden}
+.toast::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px}
+.toast--success::before{background:var(--success)}
+.toast--error::before{background:var(--error)}
+.toast--info::before{background:var(--accent)}
+.toast__icon{flex-shrink:0;width:20px;height:20px}
+.toast__msg{flex:1;font-size:14px;line-height:1.5}
+.toast__close{flex-shrink:0;width:24px;height:24px;display:grid;place-items:center;color:var(--muted);border-radius:50%;transition:background var(--t)}
+.toast__close:hover{background:var(--surface-2);color:var(--text)}
+@keyframes slideIn{from{opacity:0;transform:translateX(100%)}to{opacity:1;transform:none}}
+
+/* ============ EMPTY / LOADING ============ */
+.empty{text-align:center;padding:60px 20px;color:var(--muted)}
+.empty__icon{font-size:48px;margin-bottom:16px;opacity:.5}
+.empty__title{font-size:18px;font-weight:600;color:var(--text);margin-bottom:8px}
+.empty__btn{margin-top:16px}
+.skeleton{background:linear-gradient(90deg,var(--surface-2) 25%,var(--surface-3) 50%,var(--surface-2) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:var(--r-sm)}
+@keyframes shimmer{to{background-position:-200% 0}}
+
+/* ============ RESPONSIVE ============ */
+@media (max-width: 900px){
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .grid-form{grid-template-columns:1fr}
+}
+@media (max-width: 640px){
+  .topbar__in{height:56px;gap:10px}
+  .brand__txt span{display:none}
+  .tabs{display:none}
+  .stats{grid-template-columns:1fr}
+  .panel{padding:16px}
+  .cards{grid-template-columns:1fr}
+  .card__foot{flex-wrap:wrap}
+  th,td{padding:10px 12px}
+  .toast-container{left:16px;right:16px;bottom:16px}
+  .toast{min-width:0}
+}
+</style>
+</head>
+<body>
+<div class="bg" aria-hidden="true"></div>
+
+<header class="topbar" role="banner">
+  <div class="wrap topbar__in">
+    <a href="#" class="brand" aria-label="РемонтЗаявки — главная">
+      <span class="brand__mark" aria-hidden="true">🔧</span>
+      <span class="brand__txt">РемонтЗаявки<span> v2.0</span></span>
+    </a>
+    <nav class="tabs" role="tablist" aria-label="Основные разделы">
+      <button class="tab is-active" role="tab" aria-selected="true" data-tab="form" id="tab-form">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+        <span>Новая заявка</span>
+        <span class="badge" id="badge-form" hidden>0</span>
+      </button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="list" id="tab-list">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+        <span>Список</span>
+        <span class="badge" id="badge-list" hidden>0</span>
+      </button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="admin" id="tab-admin">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2"></rect><path d="M8 21h8"></path><path d="M12 17v4"></path></svg>
+        <span>Админка</span>
+        <span class="badge" id="badge-admin" hidden>0</span>
+      </button>
+    </nav>
+    <button class="icon-btn" id="themeToggle" aria-label="Переключить тему" title="Тема">
+      <svg class="icon-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+      <svg class="icon-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+    </button>
+  </div>
+</header>
+
+<main class="wrap" role="main">
+  <!-- ===== ВКЛАДКА: НОВАЯ ЗАЯВКА ===== -->
+  <section class="view is-active" id="view-form" role="tabpanel" aria-labelledby="tab-form">
+    <div class="hero">
+      <h1>Создать <span class="hero__glow">заявку</span> на ремонт</h1>
+      <p>Заполните форму — заявка мгновенно сохранится в браузере и появится в общем списке. Работает офлайн.</p>
+    </div>
+
+    <div class="stats" aria-label="Статистика заявок">
+      <div class="stat stat--new"><div class="stat__k">Новые</div><div class="stat__v" id="stat-new">0</div></div>
+      <div class="stat stat--prog"><div class="stat__k">В работе</div><div class="stat__v" id="stat-prog">0</div></div>
+      <div class="stat stat--done"><div class="stat__k">Готово</div><div class="stat__v" id="stat-done">0</div></div>
+      <div class="stat"><div class="stat__k">Всего</div><div class="stat__v" id="stat-all">0</div></div>
+    </div>
+
+    <form class="panel" id="form" novalidate>
+      <div class="grid-form">
+        <div class="field">
+          <label class="field__l" for="f-name">Имя клиента <span class="req" aria-hidden="true">*</span></label>
+          <input type="text" class="field__i" id="f-name" name="name" placeholder="Иван Петров" required autocomplete="name" maxlength="60">
+          <div class="field__e" id="e-name"></div>
+        </div>
+        <div class="field">
+          <label class="field__l" for="f-phone">Телефон <span class="req" aria-hidden="true">*</span></label>
+          <input type="tel" class="field__i" id="f-phone" name="phone" placeholder="+7 (999) 000-00-00" required autocomplete="tel" maxlength="18">
+          <div class="field__e" id="e-phone"></div>
+        </div>
+        <div class="field field--full">
+          <label class="field__l" for="f-address">Адрес объекта <span class="req" aria-hidden="true">*</span></label>
+          <input type="text" class="field__i" id="f-address" name="address" placeholder="г. Москва, ул. Примерная, д. 1, кв. 5" required autocomplete="street-address" maxlength="120">
+          <div class="field__e" id="e-address"></div>
+        </div>
+        <div class="field">
+          <label class="field__l" for="f-type">Тип ремонта <span class="req" aria-hidden="true">*</span></label>
+          <select class="field__i" id="f-type" name="type" required>
+            <option value="">Выберите тип</option>
+            <option value="cosmetic">Косметический</option>
+            <option value="capital">Капитальный</option>
+            <option value="design">Дизайнерский</option>
+            <option value="emergency">Аварийный</option>
+            <option value="other">Другое</option>
+          </select>
+          <div class="field__e" id="e-type"></div>
+        </div>
+        <div class="field">
+          <label class="field__l" for="f-budget">Бюджет (₽)</label>
+          <input type="number" class="field__i" id="f-budget" name="budget" placeholder="150000" min="0" step="1000" inputmode="numeric">
+          <div class="field__hint" id="h-budget">0 символов</div>
+        </div>
+      </div>
+
+      <div class="field field--full" style="margin-top:8px">
+        <label class="field__l">Приоритет <span class="req" aria-hidden="true">*</span></label>
+        <div class="seg" role="radiogroup" aria-label="Приоритет заявки">
+          <label class="seg__i"><input type="radio" name="priority" value="low" required><span>Низкий</span></label>
+          <label class="seg__i"><input type="radio" name="priority" value="normal" checked><span>Обычный</span></label>
+          <label class="seg__i"><input type="radio" name="priority" value="high"><span>Высокий</span></label>
+          <label class="seg__i"><input type="radio" name="priority" value="urgent"><span>Срочно</span></label>
+        </div>
+        <div class="field__e" id="e-priority"></div>
+      </div>
+
+      <div class="field field--full">
+        <label class="field__l" for="f-desc">Описание проблемы / пожелания <span class="req" aria-hidden="true">*</span></label>
+        <textarea class="field__i" id="f-desc" name="desc" placeholder="Подробно опишите, что нужно сделать: материалы, сроки, нюансы..." required maxlength="2000"></textarea>
+        <div class="field__hint" id="h-desc">0 / 2000</div>
+        <div class="field__e" id="e-desc"></div>
+      </div>
+
+      <div class="field field--full check">
+        <input type="checkbox" id="f-consent" name="consent" required>
+        <label for="f-consent">Согласен на обработку персональных данных и подтверждаю достоверность информации <span class="req" aria-hidden="true">*</span></label>
+        <div class="field__e" id="e-consent"></div>
+      </div>
+
+      <div class="form__foot">
+        <button type="submit" class="btn" id="btn-submit">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          Отправить заявку
+        </button>
+        <button type="reset" class="btn btn--ghost" id="btn-reset">Очистить форму</button>
+        <span class="form__note">Данные хранятся локально в браузере (localStorage)</span>
+      </div>
+    </form>
+  </section>
+
+  <!-- ===== ВКЛАДКА: СПИСОК ===== -->
+  <section class="view" id="view-list" role="tabpanel" aria-labelledby="tab-list">
+    <div class="hero">
+      <h1>Все <span class="hero__glow">заявки</span></h1>
+      <p>Поиск, фильтры и управление статусами. Изменения сохраняются автоматически.</p>
+    </div>
+
+    <div class="stats" aria-label="Статистика заявок">
+      <div class="stat stat--new"><div class="stat__k">Новые</div><div class="stat__v" id="stat-new-l">0</div></div>
+      <div class="stat stat--prog"><div class="stat__k">В работе</div><div class="stat__v" id="stat-prog-l">0</div></div>
+      <div class="stat stat--done"><div class="stat__k">Готово</div><div class="stat__v" id="stat-done-l">0</div></div>
+      <div class="stat"><div class="stat__k">Всего</div><div class="stat__v" id="stat-all-l">0</div></div>
+    </div>
+
+    <div class="panel" style="padding:0">
+      <div class="toolbar" style="padding:20px 24px;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:12px">
+        <div class="search" style="min-width:260px">
+          <svg aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><line x1="16" y1="16" x2="21" y2="21"></line></svg>
+          <input type="search" class="field__i" id="searchInput" placeholder="Поиск по имени, адресу, телефону..." aria-label="Поиск заявок">
+        </div>
+        <div class="chips" role="group" aria-label="Фильтр по статусу" id="statusChips">
+          <button class="chip is-active" data-status="all" aria-pressed="true">Все</button>
+          <button class="chip" data-status="new" aria-pressed="false">Новые</button>
+          <button class="chip" data-status="progress" aria-pressed="false">В работе</button>
+          <button class="chip" data-status="done" aria-pressed="false">Готово</button>
+        </div>
+        <select class="field__i" id="sortSelect" style="width:auto;min-width:180px" aria-label="Сортировка">
+          <option value="date-desc">Новые сверху</option>
+          <option value="date-asc">Старые сверху</option>
+          <option value="priority-desc">Приоритет: высокий → низкий</option>
+          <option value="name-asc">По имени (А–Я)</option>
+        </select>
+      </div>
+      <div class="cards" id="cardsList" role="list" aria-label="Список заявок"></div>
+    </div>
+  </section>
+
+  <!-- ===== ВКЛАДКА: АДМИНКА ===== -->
+  <section class="view" id="view-admin" role="tabpanel" aria-labelledby="tab-admin">
+    <div class="hero">
+      <h1>Панель <span class="hero__glow">администратора</span></h1>
+      <p>Полный контроль: таблица, массовые действия, экспорт в CSV, очистка базы.</p>
+    </div>
+
+    <div class="stats" aria-label="Статистика заявок">
+      <div class="stat stat--new"><div class="stat__k">Новые</div><div class="stat__v" id="stat-new-a">0</div></div>
+      <div class="stat stat--prog"><div class="stat__k">В работе</div><div class="stat__v" id="stat-prog-a">0</div></div>
+      <div class="stat stat--done"><div class="stat__k">Готово</div><div class="stat__v" id="stat-done-a">0</div></div>
+      <div class="stat"><div class="stat__k">Всего</div><div class="stat__v" id="stat-all-a">0</div></div>
+    </div>
+
+    <div class="panel" style="padding:0">
+      <div style="padding:20px 24px;border-bottom:1px solid var(--border);display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+        <button class="btn btn--ghost" id="btnExportCSV">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          Экспорт CSV
+        </button>
+        <button class="btn btn--ghost btn--danger" id="btnClearAll">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+          Очистить всё
+        </button>
+        <span style="margin-left:auto;font-size:13px;color:var(--muted)">Всего записей: <strong id="adminTotal">0</strong></span>
+      </div>
+      <div class="table-wrap">
+        <table id="adminTable" role="grid">
+          <thead>
+            <tr>
+              <th scope="col">ID</th>
+              <th scope="col">Дата</th>
+              <th scope="col">Клиент</th>
+              <th scope="col">Телефон</th>
+              <th scope="col">Адрес</th>
+              <th scope="col">Тип</th>
+              <th scope="col">Приоритет</th>
+              <th scope="col">Статус</th>
+              <th scope="col">Бюджет</th>
+              <th scope="col">Действия</th>
+            </tr>
+          </thead>
+          <tbody id="adminBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- ===== МОДАЛКА ПОДТВЕРЖДЕНИЯ ===== -->
+<div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div class="modal">
+    <h3 class="modal__title" id="modalTitle">Удалить заявку?</h3>
+    <p class="modal__text" id="modalText">Это действие нельзя отменить. Заявка будет удалена навсегда.</p>
+    <div class="modal__actions">
+      <button class="btn btn--ghost" id="modalCancel">Отмена</button>
+      <button class="btn btn--danger" id="modalConfirm">Удалить</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ТОАСТЫ ===== -->
+<div class="toast-container" id="toastContainer" aria-live="polite" aria-atomic="true"></div>
+
+<script>
+/* ============ APP LOGIC ============ */
+(() => {
+  'use strict';
+
+  // --- STATE ---
+  const STORAGE_KEY = 'repair_requests_v2';
+  let requests = [];
+  let currentFilter = 'all';
+  let currentSort = 'date-desc';
+  let deleteTargetId = null;
+
+  // --- DOM REFERENCES ---
+  const els = {
+    // Tabs
+    tabs: document.querySelectorAll('.tab'),
+    views: document.querySelectorAll('.view'),
+    // Form
+    form: document.getElementById('form'),
+    btnSubmit: document.getElementById('btn-submit'),
+    btnReset: document.getElementById('btn-reset'),
+    fields: {
+      name: { input: document.getElementById('f-name'), error: document.getElementById('e-name') },
+      phone: { input: document.getElementById('f-phone'), error: document.getElementById('e-phone') },
+      address: { input: document.getElementById('f-address'), error: document.getElementById('e-address') },
+      type: { input: document.getElementById('f-type'), error: document.getElementById('e-type') },
+      budget: { input: document.getElementById('f-budget'), hint: document.getElementById('h-budget') },
+      desc: { input: document.getElementById('f-desc'), hint: document.getElementById('h-desc'), error: document.getElementById('e-desc') },
+      priority: { inputs: document.querySelectorAll('input[name="priority"]'), error: document.getElementById('e-priority') },
+      consent: { input: document.getElementById('f-consent'), error: document.getElementById('e-consent') }
+    },
+    // List
+    searchInput: document.getElementById('searchInput'),
+    statusChips: document.getElementById('statusChips'),
+    sortSelect: document.getElementById('sortSelect'),
+    cardsList: document.getElementById('cardsList'),
+    // Admin
+    adminBody: document.getElementById('adminBody'),
+    btnExportCSV: document.getElementById('btnExportCSV'),
+    btnClearAll: document.getElementById('btnClearAll'),
+    // Stats
+    statIds: ['new','prog','done','all'],
+    // Theme
+    themeToggle: document.getElementById('themeToggle'),
+    iconSun: document.querySelector('.icon-sun'),
+    iconMoon: document.querySelector('.icon-moon'),
+    // Modal
+    overlay: document.getElementById('overlay'),
+    modalCancel: document.getElementById('modalCancel'),
+    modalConfirm: document.getElementById('modalConfirm'),
+    // Toasts
+    toastContainer: document.getElementById('toastContainer')
+  };
+
+  // --- UTILS ---
+  const $ = (sel, ctx = document) => ctx.querySelector(sel);
+  const $$ = (sel, ctx = document) => [...ctx.querySelectorAll(sel)];
+
+  const generateId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  const formatDate = (ts) => new Date(ts).toLocaleString('ru-RU', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+  const formatCurrency = (n) => n ? new Intl.NumberFormat('ru-RU').format(n) + ' ₽' : '—';
+  const escapeHtml = (s) => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const debounce = (fn, ms) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; };
+
+  // --- STORAGE ---
+  function load() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      requests = raw ? JSON.parse(raw) : [];
+      // Migration for old data
+      requests = requests.map(r => ({
+        ...r,
+        priority: r.priority || 'normal',
+        status: r.status || 'new',
+        budget: Number(r.budget) || 0,
+        desc: r.desc || ''
+      }));
+    } catch (e) { requests = []; console.error(e); }
+  }
+  function save() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(requests));
+  }
+
+  // --- THEME ---
+  function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    els.iconSun.style.display = theme === 'dark' ? 'block' : 'none';
+    els.iconMoon.style.display = theme === 'dark' ? 'none' : 'block';
+    localStorage.setItem('theme', theme);
+  }
+  function initTheme() {
+    const saved = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    applyTheme(saved || (prefersDark ? 'dark' : 'light'));
+  }
+
+  // --- VALIDATION ---
+  const validators = {
+    name: v => v.trim().length >= 2 ? '' : 'Введите имя (мин. 2 символа)',
+    phone: v => /^\+?[78][\s(]?\d{3}[\s)]?\d{3}[\s-]?\d{2}[\s-]?\d{2}$/.test(v.replace(/\s/g,'')) ? '' : 'Формат: +7 (999) 000-00-00',
+    address: v => v.trim().length >= 5 ? '' : 'Введите адрес (мин. 5 символов)',
+    type: v => v ? '' : 'Выберите тип ремонта',
+    desc: v => v.trim().length >= 10 ? '' : 'Опишите проблему подробнее (мин. 10 символов)',
+    priority: v => v ? '' : 'Выберите приоритет',
+    consent: v => v ? '' : 'Необходимо согласие'
+  };
+
+  function validateField(key) {
+    const field = els.fields[key];
+    if (!field) return true;
+    let value, isValid, msg;
+    if (key === 'priority') {
+      value = [...field.inputs].find(i => i.checked)?.value || '';
+      isValid = !!value;
+      msg = validators.priority(value);
+      field.inputs.forEach(i => i.parentElement.classList.toggle('has-error', !isValid));
+      field.error.textContent = msg;
+    } else if (key === 'consent') {
+      value = field.input.checked;
+      isValid = value;
+      msg = validators.consent(value);
+      field.input.parentElement.classList.toggle('has-error', !isValid);
+      field.error.textContent = msg;
+    } else {
+      value = field.input.value;
+      isValid = validators[key](value) === '';
+      msg = validators[key](value);
+      field.input.parentElement.classList.toggle('has-error', !isValid);
+      field.error.textContent = msg;
+    }
+    return isValid;
+  }
+
+  function validateAll() {
+    return Object.keys(els.fields).every(k => validateField(k));
+  }
+
+  function updateHints() {
+    const budgetVal = els.fields.budget.input.value;
+    els.fields.budget.hint.textContent = `${budgetVal.length} символов`;
+    const descVal = els.fields.desc.input.value;
+    els.fields.desc.hint.textContent = `${descVal.length} / 2000`;
+  }
+
+  // --- RENDER STATS ---
+  function renderStats() {
+    const counts = requests.reduce((acc, r) => {
+      acc.all++;
+      if (r.status === 'new') acc.new++;
+      else if (r.status === 'progress') acc.prog++;
+      else if (r.status === 'done') acc.done++;
+      return acc;
+    }, { new:0, prog:0, done:0, all:0 });
+
+    ['new','prog','done','all'].forEach(k => {
+      const suffixes = ['', '-l', '-a'];
+      suffixes.forEach(s => {
+        const el = document.getElementById(`stat-${k}${s}`);
+        if (el) el.textContent = counts[k];
+      });
+    });
+    document.getElementById('adminTotal').textContent = counts.all;
+    // Badges on tabs
+    document.getElementById('badge-form').textContent = counts.new;
+    document.getElementById('badge-form').hidden = counts.new === 0;
+    document.getElementById('badge-list').textContent = counts.all;
+    document.getElementById('badge-list').hidden = counts.all === 0;
+    document.getElementById('badge-admin').textContent = counts.all;
+    document.getElementById('badge-admin').hidden = counts.all === 0;
+  }
+
+  // --- RENDER LIST (CARDS) ---
+  function getFilteredSorted() {
+    let arr = [...requests];
+    // Search
+    const q = els.searchInput.value.trim().toLowerCase();
+    if (q) {
+      arr = arr.filter(r =>
+        r.name.toLowerCase().includes(q) ||
+        r.phone.includes(q) ||
+        r.address.toLowerCase().includes(q) ||
+        r.desc.toLowerCase().includes(q) ||
+        r.id.includes(q)
+      );
+    }
+    // Status filter
+    if (currentFilter !== 'all') arr = arr.filter(r => r.status === currentFilter);
+    // Sort
+    arr.sort((a,b) => {
+      switch(currentSort) {
+        case 'date-asc': return a.created - b.created;
+        case 'priority-desc': {
+          const p = { urgent:4, high:3, normal:2, low:1 };
+          return p[b.priority] - p[a.priority] || b.created - a.created;
+        }
+        case 'name-asc': return a.name.localeCompare(b.name, 'ru');
+        default: return b.created - a.created; // date-desc
+      }
+    });
+    return arr;
+  }
+
+  const statusLabels = { new: 'Новая', progress: 'В работе', done: 'Готово' };
+  const priorityLabels = { low: 'Низкий', normal: 'Обычный', high: 'Высокий', urgent: 'Срочно' };
+  const typeLabels = { cosmetic: 'Косметический', capital: 'Капитальный', design: 'Дизайнерский', emergency: 'Аварийный', other: 'Другое' };
+
+  function renderCards() {
+    const arr = getFilteredSorted();
+    if (!arr.length) {
+      els.cardsList.innerHTML = `
+        <div class="empty" style="grid-column:1/-1">
+          <div class="empty__icon">📭</div>
+          <div class="empty__title">${requests.length ? 'Ничего не найдено' : 'Заявок пока нет'}</div>
+          <p style="margin-top:4px">${requests.length ? 'Попробуйте изменить фильтр или поиск' : 'Создайте первую заявку во вкладке «Новая заявка»'}</p>
+          ${!requests.length ? '<button class="btn empty__btn" onclick="switchTab(\'form\')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Создать заявку</button>' : ''}
+        </div>`;
+      return;
+    }
+    els.cardsList.innerHTML = arr.map(r => `
+      <article class="card" role="listitem" data-id="${r.id}">
+        <div class="card__head">
+          <span class="card__id">#${r.id.slice(-6).toUpperCase()}</span>
+          <span class="card__status card__status--${r.status}">${statusLabels[r.status]}</span>
+        </div>
+        <h3 class="card__title">${escapeHtml(r.name)}</h3>
+        <div class="card__meta">
+          <span>📞 ${escapeHtml(r.phone)}</span>
+          <span>🏷 ${typeLabels[r.type] || r.type}</span>
+          <span>⚡ ${priorityLabels[r.priority]}</span>
+          <span>💰 ${formatCurrency(r.budget)}</span>
+        </div>
+        <p class="card__desc">${escapeHtml(r.desc)}</p>
+        <div class="card__foot">
+          <time class="card__date" datetime="${new Date(r.created).toISOString()}">${formatDate(r.created)}</time>
+          <div class="card__actions">
+            ${r.status !== 'done' ? `<button class="btn btn--sm btn--ok" data-action="progress" data-id="${r.id}" aria-label="В работу"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> В работу</button>` : ''}
+            ${r.status !== 'done' ? `<button class="btn btn--sm btn--ok" data-action="done" data-id="${r.id}" aria-label="Готово"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><polyline points="16 8 12 12 8 16"></polyline></svg> Готово</button>` : ''}
+            ${r.status !== 'new' ? `<button class="btn btn--sm btn--ghost" data-action="reopen" data-id="${r.id}" aria-label="Вернуть в новые"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-9 9z"></path><polyline points="12 8 12 12 16 16"></polyline></svg> В новые</button>` : ''}
+            <button class="btn btn--sm btn--danger btn-icon" data-action="delete" data-id="${r.id}" aria-label="Удалить"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+          </div>
+        </div>
+      </article>
+    `).join('');
+  }
+
+  // --- RENDER ADMIN TABLE ---
+  function renderAdmin() {
+    const arr = [...requests].sort((a,b) => b.created - a.created);
+    if (!arr.length) {
+      els.adminBody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:40px;color:var(--muted)">База пуста</td></tr>`;
+      return;
+    }
+    els.adminBody.innerHTML = arr.map(r => `
+      <tr data-id="${r.id}">
+        <td><code style="font-size:12px">#${r.id.slice(-6).toUpperCase()}</code></td>
+        <td>${formatDate(r.created)}</td>
+        <td>${escapeHtml(r.name)}</td>
+        <td>${escapeHtml(r.phone)}</td>
+        <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(r.address)}</td>
+        <td>${typeLabels[r.type] || r.type}</td>
+        <td><span style="text-transform:capitalize">${priorityLabels[r.priority]}</span></td>
+        <td><span class="badge-status badge-status--${r.status}">${statusLabels[r.status]}</span></td>
+        <td>${formatCurrency(r.budget)}</td>
+        <td>
+          <button class="btn-icon" data-action="delete" data-id="${r.id}" aria-label="Удалить заявку #${r.id.slice(-6)}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  // --- TOASTS ---
+  function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `toast toast--${type}`;
+    toast.innerHTML = `
+      <svg class="toast__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        ${type === 'success' ? '<polyline points="20 6 9 17 4 12"></polyline>' : ''}
+        ${type === 'error' ? '<circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line>' : ''}
+        ${type === 'info' ? '<circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line>' : ''}
+      </svg>
+      <span class="toast__msg">${escapeHtml(message)}</span>
+      <button class="toast__close" aria-label="Закрыть"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+    `;
+    toast.querySelector('.toast__close').onclick = () => toast.remove();
+    els.toastContainer.appendChild(toast);
+    setTimeout(() => toast.remove(), 5000);
+  }
+
+  // --- MODAL ---
+  function openModal(id) {
+    deleteTargetId = id;
+    els.overlay.classList.add('is-open');
+    els.modalConfirm.focus();
+  }
+  function closeModal() {
+    els.overlay.classList.remove('is-open');
+    deleteTargetId = null;
+  }
+
+  // --- ACTIONS ---
+  function addRequest(data) {
+    const req = {
+      id: generateId(),
+      ...data,
+      status: 'new',
+      created: Date.now()
+    };
+    requests.unshift(req);
+    save();
+    renderAll();
+    showToast('Заявка успешно создана!', 'success');
+    switchTab('list');
+  }
+
+  function updateStatus(id, status) {
+    const idx = requests.findIndex(r => r.id === id);
+    if (idx === -1) return;
+    requests[idx].status = status;
+    save();
+    renderAll();
+    showToast(`Статус изменён на «${statusLabels[status]}»`, 'info');
+  }
+
+  function deleteRequest(id) {
+    requests = requests.filter(r => r.id !== id);
+    save();
+    renderAll();
+    showToast('Заявка удалена', 'info');
+    closeModal();
+  }
+
+  function exportCSV() {
+    if (!requests.length) { showToast('Нет данных для экспорта', 'error'); return; }
+    const headers = ['ID','Дата','Имя','Телефон','Адрес','Тип','Приоритет','Статус','Бюджет','Описание'];
+    const rows = requests.map(r => [
+      r.id, new Date(r.created).toISOString(), r.name, r.phone, r.address,
+      typeLabels[r.type] || r.type, priorityLabels[r.priority], statusLabels[r.status],
+      r.budget, r.desc.replace(/"/g, '""')
+    ].map(v => `"${v}"`));
+    const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `repair-requests-${new Date().toISOString().slice(0,10)}.csv`;
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+    showToast('CSV файл скачан', 'success');
+  }
+
+  function clearAll() {
+    if (!requests.length) return;
+    openModal('__all__');
+    els.modalTitle.textContent = 'Очистить ВСЮ базу?';
+    els.modalText.textContent = `Будут удалены все ${requests.length} заявок. Это действие необратимо.`;
+    els.modalConfirm.onclick = () => {
+      requests = [];
+      save();
+      renderAll();
+      showToast('База полностью очищена', 'info');
+      closeModal();
+      els.modalConfirm.onclick = confirmDeleteSingle;
+    };
+  }
+
+  function confirmDeleteSingle() {
+    if (deleteTargetId) deleteRequest(deleteTargetId);
+  }
+
+  // --- RENDER ALL ---
+  function renderAll() {
+    renderStats();
+    renderCards();
+    renderAdmin();
+  }
+
+  // --- TABS ---
+  window.switchTab = (tabName) => {
+    els.tabs.forEach(t => {
+      const isActive = t.dataset.tab === tabName;
+      t.classList.toggle('is-active', isActive);
+      t.setAttribute('aria-selected', isActive);
+    });
+    els.views.forEach(v => v.classList.toggle('is-active', v.id === `view-${tabName}`));
+    // Scroll to top smoothly
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // --- EVENT LISTENERS ---
+  function bindEvents() {
+    // Tabs
+    els.tabs.forEach(t => t.addEventListener('click', () => switchTab(t.dataset.tab)));
+
+    // Theme
+    els.themeToggle.addEventListener('click', () => {
+      const current = document.documentElement.getAttribute('data-theme');
+      applyTheme(current === 'dark' ? 'light' : 'dark');
+    });
+
+    // Form validation live
+    Object.keys(els.fields).forEach(key => {
+      const field = els.fields[key];
+      if (key === 'priority') {
+        field.inputs.forEach(i => i.addEventListener('change', () => validateField(key)));
+      } else if (key === 'consent') {
+        field.input.addEventListener('change', () => validateField(key));
+      } else {
+        field.input.addEventListener('input', () => { validateField(key); updateHints(); });
+        field.input.addEventListener('blur', () => validateField(key));
+      }
+    });
+
+    // Form submit
+    els.form.addEventListener('submit', e => {
+      e.preventDefault();
+      if (!validateAll()) {
+        showToast('Проверьте правильность заполнения формы', 'error');
+        // Focus first error
+        const firstError = els.form.querySelector('.has-error input, .has-error textarea, .has-error select');
+        if (firstError) firstError.focus();
+        return;
+      }
+      const data = {
+        name: els.fields.name.input.value.trim(),
+        phone: els.fields.phone.input.value.trim(),
+        address: els.fields.address.input.value.trim(),
+        type: els.fields.type.input.value,
+        budget: Number(els.fields.budget.input.value) || 0,
+        desc: els.fields.desc.input.value.trim(),
+        priority: [...els.fields.priority.inputs].find(i => i.checked).value
+      };
+      els.btnSubmit.classList.add('is-loading');
+      els.btnSubmit.disabled = true;
+      // Simulate async for UX
+      setTimeout(() => {
+        addRequest(data);
+        els.form.reset();
+        Object.values(els.fields).forEach(f => {
+          if (f.input) f.input.parentElement.classList.remove('has-error');
+          if (f.inputs) f.inputs.forEach(i => i.parentElement.classList.remove('has-error'));
+          if (f.error) f.error.textContent = '';
+        });
+        updateHints();
+        els.btnSubmit.classList.remove('is-loading');
+        els.btnSubmit.disabled = false;
+      }, 300);
+    });
+
+    // Form reset
+    els.btnReset.addEventListener('click', () => {
+      setTimeout(() => {
+        Object.values(els.fields).forEach(f => {
+          if (f.input) f.input.parentElement.classList.remove('has-error');
+          if (f.inputs) f.inputs.forEach(i => i.parentElement.classList.remove('has-error'));
+          if (f.error) f.error.textContent = '';
+        });
+        updateHints();
+      }, 0);
+    });
+
+    // Search
+    els.searchInput.addEventListener('input', debounce(renderCards, 150));
+
+    // Status chips
+    els.statusChips.addEventListener('click', e => {
+      const chip = e.target.closest('.chip');
+      if (!chip) return;
+      currentFilter = chip.dataset.status;
+      $$('.chip', els.statusChips).forEach(c => {
+        c.classList.toggle('is-active', c === chip);
+        c.setAttribute('aria-pressed', c === chip);
+      });
+      renderCards();
+    });
+
+    // Sort
+    els.sortSelect.addEventListener('change', e => {
+      currentSort = e.target.value;
+      renderCards();
+    });
+
+    // Cards actions (delegation)
+    els.cardsList.addEventListener('click', e => {
+      const btn = e.target.closest('[data-action]');
+      if (!btn) return;
+      const id = btn.dataset.id;
+      const action = btn.dataset.action;
+      if (action === 'delete') openModal(id);
+      else if (action === 'progress') updateStatus(id, 'progress');
+      else if (action === 'done') updateStatus(id, 'done');
+      else if (action === 'reopen') updateStatus(id, 'new');
+    });
+
+    // Admin table actions
+    els.adminBody.addEventListener('click', e => {
+      const btn = e.target.closest('[data-action="delete"]');
+      if (btn) openModal(btn.dataset.id);
+    });
+
+    // Admin buttons
+    els.btnExportCSV.addEventListener('click', exportCSV);
+    els.btnClearAll.addEventListener('click', clearAll);
+
+    // Modal
+    els.modalCancel.addEventListener('click', closeModal);
+    els.modalConfirm.addEventListener('click', confirmDeleteSingle);
+    els.overlay.addEventListener('click', e => { if (e.target === els.overlay) closeModal(); });
+
+    // Keyboard
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') closeModal();
+      // Ctrl/Cmd + Enter submit form
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && document.getElementById('view-form').classList.contains('is-active')) {
+        els.form.dispatchEvent(new Event('submit'));
+      }
+    });
+
+    // Budget input formatting hint
+    els.fields.budget.input.addEventListener('input', updateHints);
+    els.fields.desc.input.addEventListener('input', updateHints);
+  }
+
+  // --- INIT ---
+  function init() {
+    load();
+    initTheme();
+    bindEvents();
+    renderAll();
+    updateHints();
+    // Focus first input on form tab
+    setTimeout(() => els.fields.name.input.focus(), 100);
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})();
+</script>
+</body>
+</html>
